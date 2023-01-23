@@ -27,6 +27,7 @@ func realMain() error {
 
 		breakdownFlagSet = flag.NewFlagSet("traceutils breakdown", flag.ExitOnError)
 		stwFlagSet       = flag.NewFlagSet("traceutils stw", flag.ExitOnError)
+		filterFlagSet    = flag.NewFlagSet("traceutils filter", flag.ExitOnError)
 	)
 
 	anonymize := &ffcli.Command{
@@ -95,10 +96,29 @@ func realMain() error {
 		},
 	}
 
+	filterCustom := &ffcli.Command{
+		Name:       "custom",
+		ShortUsage: "traceutils filter custom <input> <output>",
+		ShortHelp:  "Filter a trace to only include tasks and regions.",
+		Exec:       func(_ context.Context, args []string) error { return FilterCommand(args) },
+	}
+
+	filter := &ffcli.Command{
+		Name:        "filter",
+		ShortUsage:  "traceutils filter <input> <output>",
+		ShortHelp:   "Filter a trace file.",
+		FlagSet:     filterFlagSet,
+		Subcommands: []*ffcli.Command{filterCustom},
+		Exec: func(_ context.Context, _ []string) error {
+			filterFlagSet.Usage()
+			return nil
+		},
+	}
+
 	root := &ffcli.Command{
 		ShortUsage:  "traceutils [flags] <subcommand>",
 		FlagSet:     rootFlagSet,
-		Subcommands: []*ffcli.Command{anonymize, breakdown, stw},
+		Subcommands: []*ffcli.Command{anonymize, breakdown, stw, filter},
 		Exec: func(_ context.Context, _ []string) error {
 			rootFlagSet.Usage()
 			return nil
